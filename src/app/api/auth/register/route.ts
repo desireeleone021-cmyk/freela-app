@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { setAuthCookie } from "@/lib/auth";
 import { rateLimit, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
+import { sendWelcomeEmail } from "@/lib/email";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 
@@ -58,6 +59,11 @@ export async function POST(req: Request) {
         passwordHash,
       })
       .returning({ id: users.id, name: users.name, email: users.email });
+
+    // Invia email di benvenuto (non blocca la registrazione se fallisce)
+    sendWelcomeEmail(user.email, user.name).catch((err) =>
+      console.error("Errore invio email benvenuto:", err)
+    );
 
     await setAuthCookie({ userId: user.id, email: user.email });
 
