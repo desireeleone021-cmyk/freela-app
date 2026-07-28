@@ -1,8 +1,10 @@
 "use client";
+"use client";
 
 import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -13,19 +15,17 @@ function ResetPasswordForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
     if (password !== confirmPassword) {
-      setError("Le password non corrispondono");
+      toast.error("Le password non corrispondono");
       return;
     }
 
     if (password.length < 8) {
-      setError("La password deve avere almeno 8 caratteri");
+      toast.error("La password deve avere almeno 8 caratteri");
       return;
     }
 
@@ -41,14 +41,15 @@ function ResetPasswordForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Errore reset password");
+        toast.error(data.error || "Errore reset password");
         return;
       }
 
+      toast.success("Password aggiornata! 🎉");
       setSuccess(true);
       setTimeout(() => router.push("/login"), 2000);
-    } catch (err) {
-      setError("Errore di connessione");
+    } catch {
+      toast.error("Errore di connessione");
     } finally {
       setLoading(false);
     }
@@ -105,12 +106,6 @@ function ResetPasswordForm() {
           placeholder="Ripeti la password"
         />
       </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-800 text-sm">
-          {error}
-        </div>
-      )}
 
       <button
         type="submit"

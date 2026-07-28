@@ -2,17 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
 
     try {
       const res = await fetch("/api/auth/forgot-password", {
@@ -24,13 +23,14 @@ export default function ForgotPasswordPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Errore invio email");
+        toast.error(data.error || "Errore invio email");
         return;
       }
 
+      toast.success("Email inviata! Controlla la posta 📧");
       setSent(true);
-    } catch (err) {
-      setError("Errore di connessione");
+    } catch {
+      toast.error("Errore di connessione");
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ export default function ForgotPasswordPage() {
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800">
             <p className="font-medium">Controlla la tua email!</p>
             <p className="text-sm mt-1">
-              Se l'indirizzo è registrato, riceverai un link per reimpostare la password entro pochi minuti.
+              Se l&apos;indirizzo è registrato, riceverai un link per reimpostare la password entro pochi minuti.
             </p>
           </div>
         ) : (
@@ -68,12 +68,6 @@ export default function ForgotPasswordPage() {
                 placeholder="tu@esempio.com"
               />
             </div>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-800 text-sm">
-                {error}
-              </div>
-            )}
 
             <button
               type="submit"

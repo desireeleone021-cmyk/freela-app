@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "react-hot-toast";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,36 +25,38 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="it">
+    <html lang="it" suppressHydrationWarning>
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body className="bg-slate-50 text-slate-900 antialiased">
-        {children}
-        <Toaster 
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#1e293b',
-              color: '#fff',
-              borderRadius: '12px',
-              padding: '12px 16px',
-            },
-            success: {
-              iconTheme: {
-                primary: '#10b981',
-                secondary: '#fff',
+      <body className="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased transition-colors">
+        <ThemeProvider>
+          {children}
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#1e293b',
+                color: '#fff',
+                borderRadius: '12px',
+                padding: '12px 16px',
               },
-            },
-            error: {
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fff',
+              success: {
+                iconTheme: {
+                  primary: '#10b981',
+                  secondary: '#fff',
+                },
               },
-            },
-          }}
-        />
+              error: {
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
+        </ThemeProvider>
         <Analytics />
         <script
           dangerouslySetInnerHTML={{
