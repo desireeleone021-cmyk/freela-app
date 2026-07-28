@@ -27,19 +27,41 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Fix input in dark mode - forza il colore del testo */
-.dark input,
-.dark textarea,
-.dark select {
-  color-scheme: dark;
+/* Fix input password - forza sempre testo scuro visibile */
+input[type="password"],
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+input[type="date"],
+input[type="datetime-local"],
+textarea,
+select {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  caret-color: #0f172a;
 }
 
-/* Fix autofill Chrome/Safari in dark mode */
-.dark input:-webkit-autofill,
-.dark input:-webkit-autofill:hover,
-.dark input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #f1f5f9;
-  -webkit-box-shadow: 0 0 0px 1000px #1e293b inset;
+/* Nella card scura (dark mode + card scura) testo chiaro */
+.dark .bg-slate-800 input,
+.dark .bg-slate-800 textarea,
+.dark .bg-slate-900 input,
+.dark .bg-slate-900 textarea,
+.dark .bg-slate-950 input,
+.dark .bg-slate-950 textarea {
+  color: #f1f5f9 !important;
+  -webkit-text-fill-color: #f1f5f9 !important;
+  caret-color: #f1f5f9;
+}
+
+/* Fix autofill Chrome/Safari */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #0f172a !important;
+  -webkit-box-shadow: 0 0 0px 1000px #f8fafc inset !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 
