@@ -66,6 +66,7 @@ export default function LoginPage() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Nome completo</label>
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)}
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  focus:placeholder:text-transparent
                   placeholder="Mario Rossi" required />
               </div>
             )}
@@ -73,12 +74,14 @@ export default function LoginPage() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                focus:placeholder:text-transparent
                 placeholder="mario@esempio.it" required />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                focus:placeholder:text-transparent
                 placeholder="Almeno 8 caratteri" minLength={isRegister ? 8 : 6} required />
             </div>
             
