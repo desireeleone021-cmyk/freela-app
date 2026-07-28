@@ -1,10 +1,10 @@
 import { db } from "@/db";
-import { users } from "@/db/schema";
-import { setAuthCookie } from "@/lib/auth";
+import { users, emailVerificationTokens } from "@/db/schema";
 import { rateLimit, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
-import { sendWelcomeEmail } from "@/lib/email";
+import { sendVerificationEmail } from "@/lib/email";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
+import crypto from "crypto";
 
 export async function POST(req: Request) {
   try {
@@ -57,17 +57,32 @@ export async function POST(req: Request) {
         name: name.trim(),
         email: normalizedEmail,
         passwordHash,
+        emailVerified: false,
       })
       .returning({ id: users.id, name: users.name, email: users.email });
 
-    // Invia email di benvenuto (non blocca la registrazione se fallisce)
-    sendWelcomeEmail(user.email, user.name).catch((err) =>
-      console.error("Errore invio email benvenuto:", err)
+    // Genera token di verifica
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 ore
+
+    await db.insert(emailVerificationTokens).values({
+      userId: user.id,
+      token,
+      expiresAt,
+    });
+
+    // Invia email di verifica
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://freela-web-eight.vercel.app";
+    const verifyLink = `${baseUrl}/verify-email?token=${token}`;
+
+    sendVerificationEmail(user.email, user.name, verifyLink).catch((err) =>
+      console.error("Errore invio email verifica:", err)
     );
 
-    await setAuthCookie({ userId: user.id, email: user.email });
-
-    return Response.json({ user });
+    return Response.json({
+      success: true,
+      message: "Registrazione completata! Controlla la tua email per verificare l'account.",
+    });
   } catch (err) {
     console.error(err);
     return Response.json({ error: "Errore nella registrazione" }, { status: 500 });

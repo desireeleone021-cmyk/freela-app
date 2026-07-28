@@ -7,11 +7,10 @@ import { eq } from "drizzle-orm";
 
 export async function POST(req: Request) {
   try {
-    // Rate limiting: max 5 tentativi al minuto per IP
     const ip = getClientIP(req);
     const rl = rateLimit(`login:${ip}`, {
-      windowMs: 60 * 1000,   // 1 minuto
-      maxRequests: 5,         // 5 tentativi
+      windowMs: 60 * 1000,
+      maxRequests: 5,
     });
 
     if (!rl.success) {
@@ -38,6 +37,17 @@ export async function POST(req: Request) {
 
     if (!valid) {
       return Response.json({ error: "Email o password non validi" }, { status: 401 });
+    }
+
+    // Controlla se l'email è stata verificata
+    if (!user.emailVerified) {
+      return Response.json(
+        { 
+          error: "Devi verificare la tua email prima di accedere. Controlla la posta in arrivo.",
+          needsVerification: true,
+        }, 
+        { status: 403 }
+      );
     }
 
     await setAuthCookie({ userId: user.id, email: user.email });

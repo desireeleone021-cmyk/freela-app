@@ -1,4 +1,5 @@
 "use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,7 +37,13 @@ export default function LoginPage() {
         return;
       }
 
-      toast.success(isRegister ? "Account creato! Benvenuto 🎉" : "Bentornato!");
+      if (isRegister) {
+        toast.success("Registrazione completata! Controlla la tua email 📧");
+        setRegistered(true);
+        return;
+      }
+
+      toast.success("Bentornato!");
       router.push("/dashboard");
       router.refresh();
     } catch {
@@ -45,7 +53,6 @@ export default function LoginPage() {
     }
   }
 
-  // Funzioni per gestire placeholder al focus/blur
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     e.currentTarget.dataset.placeholder = e.currentTarget.placeholder;
     e.currentTarget.placeholder = "";
@@ -69,79 +76,108 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold text-white">Freela</h1>
           <p className="text-indigo-300 mt-1">Gestione Freelance</p>
         </div>
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-xl font-semibold text-slate-900 mb-6">
-            {isRegister ? "Crea il tuo account" : "Accedi al tuo account"}
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isRegister && (
+
+        {registered ? (
+          <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+              <span className="text-3xl">📧</span>
+            </div>
+            <h2 className="text-xl font-semibold text-slate-900 mb-3">
+              Controlla la tua email
+            </h2>
+            <p className="text-slate-600 mb-6">
+              Ti abbiamo inviato un link di verifica a <strong>{email}</strong>. 
+              Clicca sul link per attivare il tuo account.
+            </p>
+            <button
+              onClick={() => {
+                setRegistered(false);
+                setIsRegister(false);
+                setEmail("");
+                setPassword("");
+                setName("");
+              }}
+              className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+            >
+              ← Torna al login
+            </button>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl shadow-2xl p-8">
+            <h2 className="text-xl font-semibold text-slate-900 mb-6">
+              {isRegister ? "Crea il tuo account" : "Accedi al tuo account"}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {isRegister && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Nome completo</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    className={inputClass}
+                    placeholder="Mario Rossi"
+                    required
+                  />
+                </div>
+              )}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Nome completo</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
                 <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   onFocus={handleFocus}
                   onBlur={handleBlur}
                   className={inputClass}
-                  placeholder="Mario Rossi"
+                  placeholder="mario@esempio.it"
                   required
                 />
               </div>
-            )}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                className={inputClass}
-                placeholder="mario@esempio.it"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                className={inputClass}
-                placeholder="Almeno 8 caratteri"
-                minLength={isRegister ? 8 : 6}
-                required
-              />
-            </div>
-
-            {!isRegister && (
-              <div className="text-right">
-                <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-800">
-                  Password dimenticata?
-                </Link>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
+                  className={inputClass}
+                  placeholder="Almeno 8 caratteri"
+                  minLength={isRegister ? 8 : 6}
+                  required
+                />
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium rounded-lg transition-colors"
-            >
-              {loading ? "Caricamento..." : isRegister ? "Registrati" : "Accedi"}
-            </button>
-          </form>
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setIsRegister(!isRegister)}
-              className="text-sm text-indigo-600 hover:text-indigo-800"
-            >
-              {isRegister ? "Hai già un account? Accedi" : "Non hai un account? Registrati"}
-            </button>
+              {!isRegister && (
+                <div className="text-right">
+                  <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-800">
+                    Password dimenticata?
+                  </Link>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium rounded-lg transition-colors"
+              >
+                {loading ? "Caricamento..." : isRegister ? "Registrati" : "Accedi"}
+              </button>
+            </form>
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => setIsRegister(!isRegister)}
+                className="text-sm text-indigo-600 hover:text-indigo-800"
+              >
+                {isRegister ? "Hai già un account? Accedi" : "Non hai un account? Registrati"}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
+
         <p className="text-center text-indigo-400/60 text-xs mt-6">PWA installabile • Dati protetti • 100% tuo</p>
       </div>
     </div>
