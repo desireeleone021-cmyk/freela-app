@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -80,8 +81,17 @@ export default function LoginPage() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                placeholder="Almeno 6 caratteri" minLength={6} required />
+                placeholder="Almeno 8 caratteri" minLength={isRegister ? 8 : 6} required />
             </div>
+            
+            {!isRegister && (
+              <div className="text-right">
+                <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-800">
+                  Password dimenticata?
+                </Link>
+              </div>
+            )}
+
             <button type="submit" disabled={loading}
               className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium rounded-lg transition-colors">
               {loading ? "Caricamento..." : isRegister ? "Registrati" : "Accedi"}

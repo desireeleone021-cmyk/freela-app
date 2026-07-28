@@ -1,5 +1,4 @@
 import {
-import {
   pgTable,
   uuid,
   varchar,
