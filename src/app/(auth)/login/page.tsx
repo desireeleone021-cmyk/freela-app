@@ -1,5 +1,4 @@
 "use client";
-"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -46,6 +45,8 @@ export default function LoginPage() {
     }
   }
 
+  const inputClass = "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none focus:placeholder:text-transparent";
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -64,27 +65,40 @@ export default function LoginPage() {
             {isRegister && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Nome completo</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                  focus:placeholder:text-transparent
-                  placeholder="Mario Rossi" required />
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className={inputClass}
+                  placeholder="Mario Rossi"
+                  required
+                />
               </div>
             )}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                focus:placeholder:text-transparent
-                placeholder="mario@esempio.it" required />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={inputClass}
+                placeholder="mario@esempio.it"
+                required
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                focus:placeholder:text-transparent
-                placeholder="Almeno 8 caratteri" minLength={isRegister ? 8 : 6} required />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={inputClass}
+                placeholder="Almeno 8 caratteri"
+                minLength={isRegister ? 8 : 6}
+                required
+              />
             </div>
-            
+
             {!isRegister && (
               <div className="text-right">
                 <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-800">
@@ -93,14 +107,19 @@ export default function LoginPage() {
               </div>
             )}
 
-            <button type="submit" disabled={loading}
-              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium rounded-lg transition-colors">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium rounded-lg transition-colors"
+            >
               {loading ? "Caricamento..." : isRegister ? "Registrati" : "Accedi"}
             </button>
           </form>
           <div className="mt-6 text-center">
-            <button onClick={() => setIsRegister(!isRegister)}
-              className="text-sm text-indigo-600 hover:text-indigo-800">
+            <button
+              onClick={() => setIsRegister(!isRegister)}
+              className="text-sm text-indigo-600 hover:text-indigo-800"
+            >
               {isRegister ? "Hai già un account? Accedi" : "Non hai un account? Registrati"}
             </button>
           </div>
