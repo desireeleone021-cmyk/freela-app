@@ -1,8 +1,10 @@
 "use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,12 +12,10 @@ export default function LoginPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
     setLoading(true);
 
     try {
@@ -32,14 +32,15 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Errore sconosciuto");
+        toast.error(data.error || "Errore sconosciuto");
         return;
       }
 
+      toast.success(isRegister ? "Account creato! Benvenuto 🎉" : "Bentornato!");
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("Errore di connessione");
+      toast.error("Errore di connessione");
     } finally {
       setLoading(false);
     }
@@ -59,9 +60,6 @@ export default function LoginPage() {
           <h2 className="text-xl font-semibold text-slate-900 mb-6">
             {isRegister ? "Crea il tuo account" : "Accedi al tuo account"}
           </h2>
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>
-          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             {isRegister && (
               <div>
@@ -98,7 +96,7 @@ export default function LoginPage() {
             </button>
           </form>
           <div className="mt-6 text-center">
-            <button onClick={() => { setIsRegister(!isRegister); setError(""); }}
+            <button onClick={() => setIsRegister(!isRegister)}
               className="text-sm text-indigo-600 hover:text-indigo-800">
               {isRegister ? "Hai già un account? Accedi" : "Non hai un account? Registrati"}
             </button>
