@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -44,7 +43,7 @@ select {
   caret-color: #0f172a;
 }
 
-/* Nella card scura (dark mode + card scura) testo chiaro */
+/* Nella card scura testo chiaro */
 .dark .bg-slate-800 input,
 .dark .bg-slate-800 textarea,
 .dark .bg-slate-900 input,
@@ -54,6 +53,13 @@ select {
   color: #f1f5f9 !important;
   -webkit-text-fill-color: #f1f5f9 !important;
   caret-color: #f1f5f9;
+}
+
+/* Placeholder sparisce al click (focus) */
+input:focus::placeholder,
+textarea:focus::placeholder {
+  color: transparent !important;
+  transition: color 0.15s ease;
 }
 
 /* Fix autofill Chrome/Safari */
