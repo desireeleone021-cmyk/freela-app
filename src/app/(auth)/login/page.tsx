@@ -45,7 +45,19 @@ export default function LoginPage() {
     }
   }
 
-  const inputClass = "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none focus:placeholder:text-transparent";
+  // Funzioni per gestire placeholder al focus/blur
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.currentTarget.dataset.placeholder = e.currentTarget.placeholder;
+    e.currentTarget.placeholder = "";
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (e.currentTarget.dataset.placeholder) {
+      e.currentTarget.placeholder = e.currentTarget.dataset.placeholder;
+    }
+  };
+
+  const inputClass = "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center px-4">
@@ -69,6 +81,8 @@ export default function LoginPage() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
                   className={inputClass}
                   placeholder="Mario Rossi"
                   required
@@ -81,6 +95,8 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
                 className={inputClass}
                 placeholder="mario@esempio.it"
                 required
@@ -92,6 +108,8 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
                 className={inputClass}
                 placeholder="Almeno 8 caratteri"
                 minLength={isRegister ? 8 : 6}
