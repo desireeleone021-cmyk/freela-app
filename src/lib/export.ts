@@ -174,17 +174,17 @@ export function exportInvoiceToPDF(invoice: InvoicePDFData, user: UserPDFData) {
   // ==== TOTALE ====
   const finalY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
 
-  doc.setDrawColor(...primaryColor);
+    doc.setDrawColor(...primaryColor);
   doc.setLineWidth(0.5);
-  doc.line(120, finalY, 190, finalY);
+  doc.line(20, finalY, 190, finalY);
 
   doc.setTextColor(...darkColor);
-  doc.setFontSize(13);
+  doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text("COMPENSO CONCORDATO:", 122, finalY + 10);
+  doc.text("COMPENSO CONCORDATO", 20, finalY + 10);
 
   doc.setTextColor(...primaryColor);
-  doc.setFontSize(17);
+  doc.setFontSize(20);
   doc.text(`€ ${invoice.amount.toFixed(2).replace(".", ",")}`, 190, finalY + 10, {
     align: "right",
   });
@@ -194,10 +194,10 @@ export function exportInvoiceToPDF(invoice: InvoicePDFData, user: UserPDFData) {
     doc.setTextColor(...grayColor);
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text("NOTE:", 20, finalY + 30);
+    doc.text("NOTE:", 20, finalY + 35);
     doc.setFont("helvetica", "normal");
     const notesLines = doc.splitTextToSize(invoice.notes, 170);
-    doc.text(notesLines, 20, finalY + 37);
+    doc.text(notesLines, 20, finalY + 42);
   }
 
   // ==== DISCLAIMER FONDO PAGINA ====
