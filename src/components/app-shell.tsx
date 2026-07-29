@@ -18,6 +18,7 @@ const navItems = [
   { href: "/projects", label: "Progetti", icon: "📁" },
   { href: "/invoices", label: "Fatture", icon: "📄" },
   { href: "/time", label: "Ore", icon: "⏱️" },
+  { href: "/profile", label: "Profilo", icon: "⚙️" },
 ];
 
 export function AppShell({ user, children }: { user: User; children: React.ReactNode }) {
