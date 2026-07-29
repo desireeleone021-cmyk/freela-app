@@ -240,22 +240,6 @@ export default function ProfilePage() {
               </button>
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Conferma nuova password
-            </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              className={inputClass}
-              placeholder="Ripeti la nuova password"
-              minLength={8}
-              required
-            />
-          </div>
           <button
             type="submit"
             disabled={loading}

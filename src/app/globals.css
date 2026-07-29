@@ -43,30 +43,25 @@ select {
   caret-color: #0f172a;
 }
 
-/* Dark mode: TUTTI gli input devono avere testo chiaro se il background è scuro */
-.dark input[type="password"],
-.dark input[type="text"],
-.dark input[type="email"],
-.dark input[type="number"],
-.dark input[type="tel"],
-.dark input[type="url"],
-.dark input[type="search"],
-.dark input[type="date"],
-.dark input[type="datetime-local"],
-.dark textarea,
-.dark select {
+/* Dark mode: input dentro card SCURE = testo chiaro */
+.dark .bg-slate-800 input,
+.dark .bg-slate-800 textarea,
+.dark .bg-slate-800 select,
+.dark .bg-slate-900 input,
+.dark .bg-slate-900 textarea,
+.dark .bg-slate-900 select,
+.dark .bg-slate-950 input,
+.dark .bg-slate-950 textarea,
+.dark .bg-slate-950 select {
   color: #f1f5f9 !important;
   -webkit-text-fill-color: #f1f5f9 !important;
   caret-color: #f1f5f9;
 }
 
-/* MA se l'input è dentro una card BIANCA in dark mode (es. pagina login), mantieni testo scuro */
+/* Dark mode: input dentro card CHIARE (es. login) = testo scuro */
 .dark .bg-white input,
 .dark .bg-white textarea,
-.dark .bg-white select,
-.dark .bg-slate-50 input,
-.dark .bg-slate-50 textarea,
-.dark .bg-slate-50 select {
+.dark .bg-white select {
   color: #0f172a !important;
   -webkit-text-fill-color: #0f172a !important;
   caret-color: #0f172a;
@@ -88,10 +83,13 @@ input:-webkit-autofill:focus {
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* Fix autofill Chrome/Safari - dark mode */
-.dark input:-webkit-autofill,
-.dark input:-webkit-autofill:hover,
-.dark input:-webkit-autofill:focus {
+/* Fix autofill Chrome/Safari - dark mode (solo dentro card scure) */
+.dark .bg-slate-800 input:-webkit-autofill,
+.dark .bg-slate-800 input:-webkit-autofill:hover,
+.dark .bg-slate-800 input:-webkit-autofill:focus,
+.dark .bg-slate-900 input:-webkit-autofill,
+.dark .bg-slate-900 input:-webkit-autofill:hover,
+.dark .bg-slate-900 input:-webkit-autofill:focus {
   -webkit-text-fill-color: #f1f5f9 !important;
   -webkit-box-shadow: 0 0 0px 1000px #1e293b inset !important;
   transition: background-color 5000s ease-in-out 0s;
