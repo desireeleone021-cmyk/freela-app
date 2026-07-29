@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { clients, projects, invoices, timeEntries } from "@/db/schema";
+import { clients, projects, invoices, timeEntries, expenses } from "@/db/schema";
 import { requireAuth } from "@/lib/auth";
 import { eq, sql, and, desc } from "drizzle-orm";
 
@@ -19,6 +19,19 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: "Annullato",
 };
 
+const CATEGORY_COLORS: Record<string, string> = {
+  "Software & Abbonamenti": "#3b82f6",
+  "Marketing & Pubblicità": "#ec4899",
+  "Attrezzatura": "#8b5cf6",
+  "Fornitori": "#f97316",
+  "Consulenze": "#6366f1",
+  "Trasporti": "#06b6d4",
+  "Utenze": "#eab308",
+  "Tasse & Contributi": "#ef4444",
+  "Formazione": "#10b981",
+  "Altro": "#94a3b8",
+};
+
 const MONTHS_IT = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"];
 
 export async function GET() {
@@ -26,7 +39,7 @@ export async function GET() {
     const session = await requireAuth();
     const uid = session.userId;
 
-    // Statistiche base (uguali a prima)
+    // Statistiche base
     const [clientCount] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(clients)
@@ -60,40 +73,89 @@ export async function GET() {
       .from(timeEntries)
       .where(eq(timeEntries.userId, uid));
 
-    // 📈 GRAFICO 1: Fatturato mensile (ultimi 6 mesi)
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    sixMonthsAgo.setDate(1);
-
-    const monthlyData = await db
+    // NUOVE STATISTICHE SPESE
+    const [expenseStats] = await db
       .select({
-        month: sql<string>`to_char(coalesce(issued_at, created_at), 'YYYY-MM')`,
+        total: sql<number>`count(*)::int`,
+        totalAmount: sql<string>`coalesce(sum(amount), 0)`,
+        paidAmount: sql<string>`coalesce(sum(case when paid then amount else 0 end), 0)`,
+        pendingAmount: sql<string>`coalesce(sum(case when not paid then amount else 0 end), 0)`,
+      })
+      .from(expenses)
+      .where(eq(expenses.userId, uid));
+
+    // Stats mese corrente
+    const now = new Date();
+    const firstDayMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [monthInvoices] = await db
+      .select({
         totalAmount: sql<string>`coalesce(sum(amount), 0)`,
         paidAmount: sql<string>`coalesce(sum(case when status = 'paid' then amount else 0 end), 0)`,
       })
       .from(invoices)
       .where(and(
         eq(invoices.userId, uid),
+        sql`coalesce(issued_at, created_at) >= ${firstDayMonth.toISOString()}`
+      ));
+
+    const [monthExpenses] = await db
+      .select({
+        totalAmount: sql<string>`coalesce(sum(amount), 0)`,
+      })
+      .from(expenses)
+      .where(and(
+        eq(expenses.userId, uid),
+        sql`date >= ${firstDayMonth.toISOString()}`
+      ));
+
+    // 📈 Grafico Entrate vs Uscite (ultimi 6 mesi)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    sixMonthsAgo.setDate(1);
+
+    const monthlyInvoices = await db
+      .select({
+        month: sql<string>`to_char(coalesce(issued_at, created_at), 'YYYY-MM')`,
+        amount: sql<string>`coalesce(sum(amount), 0)`,
+      })
+      .from(invoices)
+      .where(and(
+        eq(invoices.userId, uid),
         sql`coalesce(issued_at, created_at) >= ${sixMonthsAgo.toISOString()}`
       ))
-      .groupBy(sql`to_char(coalesce(issued_at, created_at), 'YYYY-MM')`)
-      .orderBy(sql`to_char(coalesce(issued_at, created_at), 'YYYY-MM')`);
+      .groupBy(sql`to_char(coalesce(issued_at, created_at), 'YYYY-MM')`);
 
-    // Riempi con tutti i 6 mesi (anche quelli senza dati)
-    const monthlyRevenue: { month: string; revenue: number; paid: number }[] = [];
+    const monthlyExpenses = await db
+      .select({
+        month: sql<string>`to_char(date, 'YYYY-MM')`,
+        amount: sql<string>`coalesce(sum(amount), 0)`,
+      })
+      .from(expenses)
+      .where(and(
+        eq(expenses.userId, uid),
+        sql`date >= ${sixMonthsAgo.toISOString()}`
+      ))
+      .groupBy(sql`to_char(date, 'YYYY-MM')`);
+
+    const monthlyComparison: { month: string; entrate: number; uscite: number; profitto: number }[] = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date();
       d.setMonth(d.getMonth() - i);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      const found = monthlyData.find((m) => m.month === key);
-      monthlyRevenue.push({
+      const inv = monthlyInvoices.find((m) => m.month === key);
+      const exp = monthlyExpenses.find((m) => m.month === key);
+      const entrate = inv ? parseFloat(inv.amount) : 0;
+      const uscite = exp ? parseFloat(exp.amount) : 0;
+      monthlyComparison.push({
         month: MONTHS_IT[d.getMonth()],
-        revenue: found ? parseFloat(found.totalAmount) : 0,
-        paid: found ? parseFloat(found.paidAmount) : 0,
+        entrate,
+        uscite,
+        profitto: entrate - uscite,
       });
     }
 
-    // 🥧 GRAFICO 2: Progetti per stato
+    // 🥧 Progetti per stato
     const statusData = await db
       .select({
         status: projects.status,
@@ -109,7 +171,23 @@ export async function GET() {
       color: STATUS_COLORS[s.status] || "#94a3b8",
     }));
 
-    // 📊 GRAFICO 3: Ore per progetto (top 5)
+    // 🥧 Spese per categoria
+    const expensesByCategoryData = await db
+      .select({
+        category: expenses.category,
+        amount: sql<string>`coalesce(sum(amount), 0)`,
+      })
+      .from(expenses)
+      .where(eq(expenses.userId, uid))
+      .groupBy(expenses.category);
+
+    const expensesByCategory = expensesByCategoryData.map((c) => ({
+      name: c.category,
+      value: parseFloat(c.amount),
+      color: CATEGORY_COLORS[c.category] || "#94a3b8",
+    }));
+
+    // 📊 Ore per progetto (top 5)
     const hoursByProjectData = await db
       .select({
         projectName: projects.name,
@@ -129,7 +207,7 @@ export async function GET() {
         hours: parseFloat(p.hours),
       }));
 
-    // 🏆 GRAFICO 4: Top 5 clienti per fatturato
+    // 🏆 Top clienti
     const topClientsData = await db
       .select({
         clientName: clients.name,
@@ -149,23 +227,44 @@ export async function GET() {
         amount: parseFloat(c.amount),
       }));
 
+    // Calcolo profitto totale e mensile
+    const totalRevenue = parseFloat(invoiceStats.totalAmount);
+    const totalExpenses = parseFloat(expenseStats.totalAmount);
+    const totalProfit = totalRevenue - totalExpenses;
+
+    const monthRevenue = parseFloat(monthInvoices.totalAmount);
+    const monthExpenseAmount = parseFloat(monthExpenses.totalAmount);
+    const monthProfit = monthRevenue - monthExpenseAmount;
+
     return Response.json({
       clients: clientCount.count,
       projects: projectCount.count,
       activeProjects: activeProjectCount.count,
       invoices: {
         total: invoiceStats.total,
-        totalAmount: parseFloat(invoiceStats.totalAmount),
+        totalAmount: totalRevenue,
         paidAmount: parseFloat(invoiceStats.paidAmount),
         pendingAmount: parseFloat(invoiceStats.pendingAmount),
+      },
+      expenses: {
+        total: expenseStats.total,
+        totalAmount: totalExpenses,
+        paidAmount: parseFloat(expenseStats.paidAmount),
+        pendingAmount: parseFloat(expenseStats.pendingAmount),
       },
       hours: {
         total: parseFloat(hoursStats.totalHours),
         billable: parseFloat(hoursStats.billableHours),
       },
-      // Nuovi dati grafici
-      monthlyRevenue,
+      profit: {
+        total: totalProfit,
+        month: monthProfit,
+        monthRevenue,
+        monthExpenses: monthExpenseAmount,
+      },
+      monthlyComparison,
       projectsByStatus,
+      expensesByCategory,
       hoursByProject,
       topClients,
     });
