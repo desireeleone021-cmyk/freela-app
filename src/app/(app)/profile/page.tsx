@@ -10,6 +10,25 @@ interface UserData {
   email: string;
 }
 
+function EyeIcon({ visible }: { visible: boolean }) {
+  if (visible) {
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+        <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+        <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+        <line x1="2" x2="22" y1="2" y2="22"/>
+      </svg>
+    );
+  }
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  );
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
@@ -21,10 +40,10 @@ export default function ProfilePage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Stati per eliminazione account
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -136,7 +155,6 @@ export default function ProfilePage() {
         <p className="text-slate-600 dark:text-slate-400 mt-1">Gestisci il tuo account</p>
       </div>
 
-      {/* Info account */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
           Informazioni account
@@ -157,13 +175,12 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Cambio password */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
           Cambia password
         </h2>
         <form onSubmit={handleChangePassword} className="space-y-4">
-                    <div>
+          <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               Password attuale
             </label>
@@ -181,13 +198,14 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 title={showCurrentPassword ? "Nascondi password" : "Mostra password"}
               >
-                {showCurrentPassword ? "🙈" : "👁️"}
+                <EyeIcon visible={showCurrentPassword} />
               </button>
             </div>
           </div>
+
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               Nuova password
@@ -207,13 +225,14 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 title={showNewPassword ? "Nascondi password" : "Mostra password"}
               >
-                {showNewPassword ? "🙈" : "👁️"}
+                <EyeIcon visible={showNewPassword} />
               </button>
             </div>
           </div>
+
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               Conferma nuova password
@@ -233,13 +252,14 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 title={showConfirmPassword ? "Nascondi password" : "Mostra password"}
               >
-                {showConfirmPassword ? "🙈" : "👁️"}
+                <EyeIcon visible={showConfirmPassword} />
               </button>
             </div>
           </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -250,7 +270,6 @@ export default function ProfilePage() {
         </form>
       </div>
 
-      {/* Zona pericolosa - Elimina account */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border-2 border-red-200 dark:border-red-900 p-6">
         <h2 className="text-lg font-semibold text-red-700 dark:text-red-400 mb-2">
           ⚠️ Zona pericolosa
@@ -266,7 +285,6 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      {/* Modal conferma eliminazione */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -282,16 +300,25 @@ export default function ProfilePage() {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Inserisci la tua password
                 </label>
-                <input
-                  type="password"
-                  value={deletePassword}
-                  onChange={(e) => setDeletePassword(e.target.value)}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                  className={dangerInputClass}
-                  placeholder="La tua password"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showDeletePassword ? "text" : "password"}
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    className={dangerInputClass + " pr-11"}
+                    placeholder="La tua password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowDeletePassword(!showDeletePassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600 transition-colors"
+                  >
+                    <EyeIcon visible={showDeletePassword} />
+                  </button>
+                </div>
               </div>
 
               <div>
