@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
 import { CardsGridSkeleton, PageHeaderSkeleton } from "@/components/skeleton";
+import { exportToCSV } from "@/lib/export";
 
 interface Client {
   id: string;
@@ -139,17 +140,37 @@ export default function ClientsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Clienti</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
             {filteredClients.length} di {clients.length} clienti
           </p>
         </div>
-        <button onClick={() => { resetForm(); setShowForm(true); }}
-          className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700">
-          + Nuovo Cliente
-        </button>
+        <div className="flex gap-2">
+          {clients.length > 0 && (
+            <button
+              onClick={() => exportToCSV(
+                filteredClients,
+                "clienti",
+                [
+                  { key: "name", label: "Nome" },
+                  { key: "company", label: "Azienda" },
+                  { key: "email", label: "Email" },
+                  { key: "phone", label: "Telefono" },
+                  { key: "notes", label: "Note" },
+                ]
+              )}
+              className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700"
+            >
+              📊 Esporta CSV
+            </button>
+          )}
+          <button onClick={() => { resetForm(); setShowForm(true); }}
+            className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700">
+            + Nuovo Cliente
+          </button>
+        </div>
       </div>
 
       {/* Barra ricerca + ordinamento */}

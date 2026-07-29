@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
+import { exportToCSV, exportInvoiceToPDF } from "@/lib/export";
 import { PageHeaderSkeleton, TableSkeleton } from "@/components/skeleton";
 
 interface Client { id: string; name: string; }
@@ -20,10 +21,10 @@ interface Invoice {
 }
 
 const statusLabels: Record<string, { label: string; color: string }> = {
-  draft: { label: "Bozza", color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400" },
-  sent: { label: "Inviata", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" },
-  paid: { label: "Pagata", color: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400" },
-  overdue: { label: "Scaduta", color: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400" },
+  draft: { label: "In lavorazione", color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400" },
+  sent: { label: "Inviato", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" },
+  paid: { label: "Incassato", color: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400" },
+  overdue: { label: "In attesa", color: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400" },
 };
 
 type SortKey = "number" | "clientName" | "amount" | "status" | "dueAt";
@@ -35,6 +36,7 @@ export default function InvoicesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ number: "", amount: "", clientId: "", status: "draft", issuedAt: "", dueAt: "", notes: "" });
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
 
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("");
@@ -49,6 +51,9 @@ export default function InvoicesPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    fetch("/api/auth/me").then(r => r.json()).then(data => setUser(data.user));
+  }, []);
 
   const filteredInvoices = useMemo(() => {
     let result = [...invoices];
@@ -196,19 +201,53 @@ export default function InvoicesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Fatture</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">💰 Compensi</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
-            {filteredInvoices.length} di {invoices.length} fatture
+            {filteredInvoices.length} di {invoices.length} compensi registrati
           </p>
         </div>
-        <button onClick={() => { resetForm(); setShowForm(true); }}
-          className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700">
-          + Nuova Fattura
-        </button>
+        <div className="flex gap-2">
+          {invoices.length > 0 && (
+            <button
+              onClick={() => exportToCSV(
+                filteredInvoices,
+                "compensi",
+                [
+                  { key: "number", label: "Riferimento" },
+                  { key: "clientName", label: "Cliente" },
+                  { key: "amount", label: "Importo" },
+                  { key: "status", label: "Stato" },
+                  { key: "issuedAt", label: "Data emissione" },
+                  { key: "dueAt", label: "Scadenza" },
+                  { key: "paidAt", label: "Data incasso" },
+                ]
+              )}
+              className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700"
+            >
+              📊 Esporta CSV
+            </button>
+          )}
+          <button onClick={() => { resetForm(); setShowForm(true); }}
+            className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700">
+            + Nuovo Compenso
+          </button>
+        </div>
       </div>
 
+      {/* Disclaimer legale */}
+      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6 flex gap-3">
+        <span className="text-2xl">⚠️</span>
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+            Sezione gestione compensi personali
+          </p>
+          <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+            Questa sezione serve per tenere traccia dei tuoi incassi. I documenti PDF esportati sono <strong>report riepilogativi non fiscali</strong>. Per la fatturazione elettronica obbligatoria utilizza un servizio autorizzato (es. Fatture in Cloud, Aruba Fatturazione).
+          </p>
+        </div>
+      </div>
       {/* Ricerca e filtri */}
       {invoices.length > 0 && (
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -236,12 +275,12 @@ export default function InvoicesPage() {
 
       {showForm && (
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 mb-6">
-          <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-slate-100">
-            {editingId ? "Modifica Fattura" : "Nuova Fattura"}
-          </h3>
+        <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-slate-100">
+          {editingId ? "Modifica Compenso" : "Nuovo Compenso"}
+        </h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Numero *</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Riferimento *</label>
               <input value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })}
                 onFocus={handleFocus} onBlur={handleBlur}
                 className={inputClass} required placeholder="FAT-001" />
@@ -256,10 +295,10 @@ export default function InvoicesPage() {
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Stato</label>
               <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className={inputClass}>
-                <option value="draft">Bozza</option>
-                <option value="sent">Inviata</option>
-                <option value="paid">Pagata</option>
-                <option value="overdue">Scaduta</option>
+                <option value="draft">In lavorazione</option>
+		<option value="sent">Inviato al cliente</option>
+		<option value="paid">Incassato</option>
+		<option value="overdue">In attesa pagamento</option>
               </select>
             </div>
             <div>
@@ -294,7 +333,7 @@ export default function InvoicesPage() {
       {invoices.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 shadow-sm border border-slate-100 dark:border-slate-800 text-center">
           <p className="text-4xl mb-3">📄</p>
-          <p className="text-slate-500 dark:text-slate-400">Nessuna fattura ancora. Creane una!</p>
+          <p className="text-slate-500 dark:text-slate-400">Nessun compenso registrato. Aggiungine uno!</p>
         </div>
       ) : filteredInvoices.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 shadow-sm border border-slate-100 dark:border-slate-800 text-center">
@@ -307,7 +346,7 @@ export default function InvoicesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-                  <SortHeader label="N°" keyName="number" />
+                  <SortHeader label="Rif." keyName="number" />
                   <SortHeader label="Cliente" keyName="clientName" />
                   <SortHeader label="Importo" keyName="amount" align="right" />
                   <SortHeader label="Stato" keyName="status" />
@@ -329,11 +368,18 @@ export default function InvoicesPage() {
                       <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{fmtDate(inv.dueAt)}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-1">
-                          {inv.status !== "paid" && (
-                            <button onClick={() => markPaid(inv)} className="p-1.5 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/30 text-slate-400 hover:text-green-600">✅</button>
+                                                    {inv.status !== "paid" && (
+                            <button onClick={() => markPaid(inv)} className="p-1.5 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/30 text-slate-400 hover:text-green-600" title="Segna come incassato">✅</button>
                           )}
-                          <button onClick={() => startEdit(inv)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-indigo-600">✏️</button>
-                          <button onClick={() => handleDelete(inv.id)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-red-600">🗑️</button>
+                          <button
+                            onClick={() => user && exportInvoiceToPDF({ ...inv, amount: parseFloat(inv.amount) }, user)}
+                            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-indigo-600"
+                            title="Scarica report cliente (non fiscale)"
+                          >
+                            📄
+                          </button>
+                          <button onClick={() => startEdit(inv)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-indigo-600" title="Modifica">✏️</button>
+                          <button onClick={() => handleDelete(inv.id)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-red-600" title="Elimina">🗑️</button>
                         </div>
                       </td>
                     </tr>

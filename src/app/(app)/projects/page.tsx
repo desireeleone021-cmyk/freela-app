@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
+import { exportToCSV } from "@/lib/export";
 import { CardsGridSkeleton, PageHeaderSkeleton } from "@/components/skeleton";
 
 interface Client { id: string; name: string; }
@@ -160,17 +161,37 @@ export default function ProjectsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Progetti</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
             {filteredProjects.length} di {projects.length} progetti
           </p>
         </div>
-        <button onClick={() => { resetForm(); setShowForm(true); }}
-          className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700">
-          + Nuovo Progetto
-        </button>
+        <div className="flex gap-2">
+          {projects.length > 0 && (
+            <button
+              onClick={() => exportToCSV(
+                filteredProjects,
+                "progetti",
+                [
+                  { key: "name", label: "Nome" },
+                  { key: "clientName", label: "Cliente" },
+                  { key: "status", label: "Stato" },
+                  { key: "budget", label: "Budget" },
+                  { key: "description", label: "Descrizione" },
+                ]
+              )}
+              className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700"
+            >
+              📊 Esporta CSV
+            </button>
+          )}
+          <button onClick={() => { resetForm(); setShowForm(true); }}
+            className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700">
+            + Nuovo Progetto
+          </button>
+        </div>
       </div>
 
       {/* Barra ricerca + filtri + ordinamento */}

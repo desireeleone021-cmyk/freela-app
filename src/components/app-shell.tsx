@@ -16,7 +16,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "📊" },
   { href: "/clients", label: "Clienti", icon: "👥" },
   { href: "/projects", label: "Progetti", icon: "📁" },
-  { href: "/invoices", label: "Fatture", icon: "📄" },
+  { href: "/invoices", label: "Compensi", icon: "💰" },
   { href: "/expenses", label: "Spese", icon: "💸" },
   { href: "/time", label: "Ore", icon: "⏱️" },
   { href: "/profile", label: "Profilo", icon: "⚙️" },
