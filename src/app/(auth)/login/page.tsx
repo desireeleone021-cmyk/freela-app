@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [registered, setRegistered] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -104,27 +105,38 @@ export default function LoginPage() {
           </div>
         ) : (
           <div className="bg-white rounded-2xl shadow-2xl p-8">
-            <h2 className="text-xl font-semibold text-slate-900 mb-6">
-              {isRegister ? "Crea il tuo account" : "Accedi al tuo account"}
-            </h2>
+            <h2 className="text-xl font-semibold text-indigo-900 mb-6">
+  	      {isRegister ? "Crea il tuo account" : "Accedi al tuo account"}
+	    </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {isRegister && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Nome completo</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
-                    className={inputClass}
-                    placeholder="Mario Rossi"
-                    required
-                  />
-                </div>
+                            <div>
+              <label className="block text-sm font-medium text-indigo-800 mb-1">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
+                  className={inputClass + " pr-11"}
+                  placeholder="Almeno 8 caratteri"
+                  minLength={isRegister ? 8 : 6}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
+                  title={showPassword ? "Nascondi password" : "Mostra password"}
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
+            </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-indigo-800 mb-1">Email</label>
                 <input
                   type="email"
                   value={email}
@@ -137,7 +149,7 @@ export default function LoginPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-indigo-800 mb-1">Password</label>
                 <input
                   type="password"
                   value={password}
