@@ -111,7 +111,21 @@ input:-webkit-autofill:focus {
 .dark ::-webkit-scrollbar-thumb {
   background: #475569;
 }
+/* Dark mode: placeholder più chiaro e leggibile */
+.dark .bg-slate-800::placeholder,
+.dark .bg-slate-800 input::placeholder,
+.dark .bg-slate-800 textarea::placeholder,
+.dark .bg-slate-900 input::placeholder,
+.dark .bg-slate-900 textarea::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1;
+}
 
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #94a3b8 !important;
+  opacity: 0.7;
+}
 @media (display-mode: standalone) {
   body {
     -webkit-user-select: none;
