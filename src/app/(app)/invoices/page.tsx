@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
 import { PageHeaderSkeleton, TableSkeleton } from "@/components/skeleton";
 
@@ -26,6 +26,8 @@ const statusLabels: Record<string, { label: string; color: string }> = {
   overdue: { label: "Scaduta", color: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400" },
 };
 
+type SortKey = "number" | "clientName" | "amount" | "status" | "dueAt";
+
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -33,6 +35,11 @@ export default function InvoicesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ number: "", amount: "", clientId: "", status: "draft", issuedAt: "", dueAt: "", notes: "" });
+
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("");
+  const [sortKey, setSortKey] = useState<SortKey>("number");
+  const [sortAsc, setSortAsc] = useState(false);
 
   const load = useCallback(() => {
     Promise.all([
@@ -42,6 +49,48 @@ export default function InvoicesPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const filteredInvoices = useMemo(() => {
+    let result = [...invoices];
+
+    if (search.trim()) {
+      const q = search.toLowerCase().trim();
+      result = result.filter(inv => 
+        inv.number.toLowerCase().includes(q) ||
+        (inv.clientName && inv.clientName.toLowerCase().includes(q)) ||
+        inv.amount.includes(q)
+      );
+    }
+
+    if (filterStatus) {
+      result = result.filter(inv => inv.status === filterStatus);
+    }
+
+    result.sort((a, b) => {
+      let aVal: string | number = "";
+      let bVal: string | number = "";
+      if (sortKey === "amount") {
+        aVal = parseFloat(a.amount);
+        bVal = parseFloat(b.amount);
+      } else if (sortKey === "dueAt") {
+        aVal = a.dueAt || "";
+        bVal = b.dueAt || "";
+      } else {
+        aVal = (a[sortKey] || "").toString().toLowerCase();
+        bVal = (b[sortKey] || "").toString().toLowerCase();
+      }
+      if (aVal < bVal) return sortAsc ? -1 : 1;
+      if (aVal > bVal) return sortAsc ? 1 : -1;
+      return 0;
+    });
+
+    return result;
+  }, [invoices, search, filterStatus, sortKey, sortAsc]);
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) setSortAsc(!sortAsc);
+    else { setSortKey(key); setSortAsc(true); }
+  }
 
   function resetForm() {
     setForm({ number: "", amount: "", clientId: "", status: "draft", issuedAt: "", dueAt: "", notes: "" });
@@ -127,6 +176,15 @@ export default function InvoicesPage() {
 
   const inputClass = "w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none";
 
+  const SortHeader = ({ label, keyName, align = "left" }: { label: string; keyName: SortKey; align?: "left" | "right" }) => (
+    <th className={`text-${align} px-4 py-3 font-medium text-slate-600 dark:text-slate-400`}>
+      <button onClick={() => toggleSort(keyName)} className={`inline-flex items-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400 ${sortKey === keyName ? "text-indigo-600 dark:text-indigo-400" : ""}`}>
+        {label}
+        {sortKey === keyName ? (sortAsc ? "↑" : "↓") : "↕"}
+      </button>
+    </th>
+  );
+
   if (loading) {
     return (
       <div>
@@ -141,13 +199,40 @@ export default function InvoicesPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Fatture</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">{invoices.length} fatture totali</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
+            {filteredInvoices.length} di {invoices.length} fatture
+          </p>
         </div>
         <button onClick={() => { resetForm(); setShowForm(true); }}
           className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700">
           + Nuova Fattura
         </button>
       </div>
+
+      {/* Ricerca e filtri */}
+      {invoices.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="flex-1 relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+            <input type="text" placeholder="Cerca per numero, cliente, importo..."
+              value={search} onChange={(e) => setSearch(e.target.value)}
+              onFocus={handleFocus} onBlur={handleBlur}
+              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+            {search && (
+              <button onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">✕</button>
+            )}
+          </div>
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+            <option value="">Tutti gli stati</option>
+            <option value="draft">Bozza</option>
+            <option value="sent">Inviata</option>
+            <option value="paid">Pagata</option>
+            <option value="overdue">Scaduta</option>
+          </select>
+        </div>
+      )}
 
       {showForm && (
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 mb-6">
@@ -211,22 +296,27 @@ export default function InvoicesPage() {
           <p className="text-4xl mb-3">📄</p>
           <p className="text-slate-500 dark:text-slate-400">Nessuna fattura ancora. Creane una!</p>
         </div>
+      ) : filteredInvoices.length === 0 ? (
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 shadow-sm border border-slate-100 dark:border-slate-800 text-center">
+          <p className="text-4xl mb-3">🔍</p>
+          <p className="text-slate-500 dark:text-slate-400">Nessun risultato trovato</p>
+        </div>
       ) : (
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-                  <th className="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-400">N°</th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-400">Cliente</th>
-                  <th className="text-right px-4 py-3 font-medium text-slate-600 dark:text-slate-400">Importo</th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-400">Stato</th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-400">Scadenza</th>
+                  <SortHeader label="N°" keyName="number" />
+                  <SortHeader label="Cliente" keyName="clientName" />
+                  <SortHeader label="Importo" keyName="amount" align="right" />
+                  <SortHeader label="Stato" keyName="status" />
+                  <SortHeader label="Scadenza" keyName="dueAt" />
                   <th className="text-right px-4 py-3 font-medium text-slate-600 dark:text-slate-400">Azioni</th>
                 </tr>
               </thead>
               <tbody>
-                {invoices.map((inv) => {
+                {filteredInvoices.map((inv) => {
                   const st = statusLabels[inv.status] || statusLabels.draft;
                   return (
                     <tr key={inv.id} className="border-b border-slate-50 dark:border-slate-800">

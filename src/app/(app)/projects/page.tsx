@@ -1,7 +1,6 @@
 "use client";
-"use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
 import { CardsGridSkeleton, PageHeaderSkeleton } from "@/components/skeleton";
 
@@ -23,6 +22,8 @@ const statusLabels: Record<string, { label: string; color: string }> = {
   cancelled: { label: "Annullato", color: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400" },
 };
 
+type SortKey = "name" | "status" | "budget";
+
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -30,6 +31,12 @@ export default function ProjectsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", description: "", clientId: "", status: "active", budget: "" });
+
+  // Ricerca e filtri
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("");
+  const [sortKey, setSortKey] = useState<SortKey>("name");
+  const [sortAsc, setSortAsc] = useState(true);
 
   const load = useCallback(() => {
     Promise.all([
@@ -39,6 +46,45 @@ export default function ProjectsPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const filteredProjects = useMemo(() => {
+    let result = [...projects];
+
+    if (search.trim()) {
+      const q = search.toLowerCase().trim();
+      result = result.filter(p => 
+        p.name.toLowerCase().includes(q) ||
+        (p.description && p.description.toLowerCase().includes(q)) ||
+        (p.clientName && p.clientName.toLowerCase().includes(q))
+      );
+    }
+
+    if (filterStatus) {
+      result = result.filter(p => p.status === filterStatus);
+    }
+
+    result.sort((a, b) => {
+      let aVal: string | number = "";
+      let bVal: string | number = "";
+      if (sortKey === "budget") {
+        aVal = parseFloat(a.budget || "0");
+        bVal = parseFloat(b.budget || "0");
+      } else {
+        aVal = (a[sortKey] || "").toString().toLowerCase();
+        bVal = (b[sortKey] || "").toString().toLowerCase();
+      }
+      if (aVal < bVal) return sortAsc ? -1 : 1;
+      if (aVal > bVal) return sortAsc ? 1 : -1;
+      return 0;
+    });
+
+    return result;
+  }, [projects, search, filterStatus, sortKey, sortAsc]);
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) setSortAsc(!sortAsc);
+    else { setSortKey(key); setSortAsc(true); }
+  }
 
   function resetForm() {
     setForm({ name: "", description: "", clientId: "", status: "active", budget: "" });
@@ -117,13 +163,66 @@ export default function ProjectsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Progetti</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">{projects.length} progetti totali</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
+            {filteredProjects.length} di {projects.length} progetti
+          </p>
         </div>
         <button onClick={() => { resetForm(); setShowForm(true); }}
           className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700">
           + Nuovo Progetto
         </button>
       </div>
+
+      {/* Barra ricerca + filtri + ordinamento */}
+      {projects.length > 0 && (
+        <div className="space-y-3 mb-6">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+              <input
+                type="text"
+                placeholder="Cerca per nome, descrizione, cliente..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+              {search && (
+                <button onClick={() => setSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  ✕
+                </button>
+              )}
+            </div>
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+              <option value="">Tutti gli stati</option>
+              <option value="active">Attivo</option>
+              <option value="paused">In pausa</option>
+              <option value="completed">Completato</option>
+              <option value="cancelled">Annullato</option>
+            </select>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <span className="text-sm text-slate-500 dark:text-slate-400 self-center">Ordina per:</span>
+            {(["name", "status", "budget"] as SortKey[]).map((key) => (
+              <button
+                key={key}
+                onClick={() => toggleSort(key)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  sortKey === key
+                    ? "bg-indigo-600 text-white"
+                    : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                }`}
+              >
+                {key === "name" ? "Nome" : key === "status" ? "Stato" : "Budget"}
+                {sortKey === key && (sortAsc ? " ↑" : " ↓")}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 mb-6">
@@ -183,9 +282,14 @@ export default function ProjectsPage() {
           <p className="text-4xl mb-3">📁</p>
           <p className="text-slate-500 dark:text-slate-400">Nessun progetto ancora. Creane uno!</p>
         </div>
+      ) : filteredProjects.length === 0 ? (
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 shadow-sm border border-slate-100 dark:border-slate-800 text-center">
+          <p className="text-4xl mb-3">🔍</p>
+          <p className="text-slate-500 dark:text-slate-400">Nessun risultato trovato</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((p) => {
+          {filteredProjects.map((p) => {
             const st = statusLabels[p.status] || statusLabels.active;
             return (
               <div key={p.id} className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow">
