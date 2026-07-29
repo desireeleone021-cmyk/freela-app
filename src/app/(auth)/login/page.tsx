@@ -1,10 +1,28 @@
 "use client";
-"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
+
+function EyeIcon({ visible }: { visible: boolean }) {
+  if (visible) {
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+        <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+        <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+        <line x1="2" x2="22" y1="2" y2="22"/>
+      </svg>
+    );
+  }
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,8 +31,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [registered, setRegistered] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -83,7 +101,7 @@ export default function LoginPage() {
             <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
               <span className="text-3xl">📧</span>
             </div>
-            <h2 className="text-xl font-semibold text-slate-900 mb-3">
+            <h2 className="text-xl font-semibold text-indigo-900 mb-3">
               Controlla la tua email
             </h2>
             <p className="text-slate-600 mb-6">
@@ -106,46 +124,23 @@ export default function LoginPage() {
         ) : (
           <div className="bg-white rounded-2xl shadow-2xl p-8">
             <h2 className="text-xl font-semibold text-indigo-900 mb-6">
-  	      {isRegister ? "Crea il tuo account" : "Accedi al tuo account"}
-	    </h2>
+              {isRegister ? "Crea il tuo account" : "Accedi al tuo account"}
+            </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {isRegister && (
-                            <div>
-              <label className="block text-sm font-medium text-indigo-800 mb-1">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                  className={inputClass + " pr-11"}
-                  placeholder="Almeno 8 caratteri"
-                  minLength={isRegister ? 8 : 6}
-                  required
-                />
-                                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
-                  title={showPassword ? "Nascondi password" : "Mostra password"}
-                >
-                  {showPassword ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
-                      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
-                      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
-                      <line x1="2" x2="22" y1="2" y2="22"/>
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-                      <circle cx="12" cy="12" r="3"/>
-                    </svg>
-                  )}
-                </button>
-              </div>
-            </div>
+                <div>
+                  <label className="block text-sm font-medium text-indigo-800 mb-1">Nome completo</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    className={inputClass}
+                    placeholder="Mario Rossi"
+                    required
+                  />
+                </div>
               )}
               <div>
                 <label className="block text-sm font-medium text-indigo-800 mb-1">Email</label>
@@ -162,17 +157,27 @@ export default function LoginPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-indigo-800 mb-1">Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                  className={inputClass}
-                  placeholder="Almeno 8 caratteri"
-                  minLength={isRegister ? 8 : 6}
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    className={inputClass + " pr-11"}
+                    placeholder="Almeno 8 caratteri"
+                    minLength={isRegister ? 8 : 6}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
+                    title={showPassword ? "Nascondi password" : "Mostra password"}
+                  >
+                    <EyeIcon visible={showPassword} />
+                  </button>
+                </div>
               </div>
 
               {!isRegister && (
